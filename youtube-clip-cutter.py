@@ -50,13 +50,27 @@ def seconds_to_mmss(seconds):
     seconds = seconds % 60
     return f"{minutes:02}:{seconds:02}"
 
+# Function to convert mm:ss to total seconds
+def convert_to_seconds(minutes, seconds):
+    return minutes * 60 + seconds
+
+# Function to format duration
+def format_duration(seconds):
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = seconds % 60
+    if hours > 0:
+        return f"{hours:02}:{minutes:02}:{seconds:02}"
+    else:
+        return f"{minutes:02}:{seconds:02}"
+
 # Cleanup function to delete old files
 def cleanup_old_files():
     while True:
         time.sleep(600)  # Sleep for 10 minutes
         folder_path = "downloads"
         current_time = time.time()
-        
+
         # Delete files older than 10 minutes
         for filename in os.listdir(folder_path):
             file_path = os.path.join(folder_path, filename)
@@ -104,20 +118,81 @@ def main():
             st.write(f"Video Title: {title}")
             st.write(f"Video Duration: {video_duration // 60} minutes {video_duration % 60} seconds")
 
-        # Single slider for selecting a region in the video (in seconds)
-        region = st.slider(
-            "Select Trim Region (Start and End)", 
-            0, video_duration, 
-            (0, video_duration), 1,  # Step is set to 1
-            key="trim_region_slider"  # Unique key for the slider
-        )
+        # Initialize session state for start and end times
+        if 'start_time' not in st.session_state:
+            st.session_state.start_time = 0
+        if 'end_time' not in st.session_state:
+            st.session_state.end_time = video_duration
 
-        start_time = region[0]
-        end_time = region[1]
+        # Create a form for input fields
+        with st.form(key='time_input_form'):
+            st.write("Fine-tune start time:")
+            start_col1, start_col2 = st.columns(2)
+            with start_col1:
+                start_minutes = st.number_input(
+                    "Minutes",
+                    min_value=0,
+                    max_value=video_duration // 60,  # Maximum minutes based on video duration
+                    value=st.session_state.start_time // 60,
+                    step=1,
+                    key='fine_start_minutes_input'
+                )
+            with start_col2:
+                start_seconds = st.number_input(
+                    "Seconds",
+                    min_value=0,
+                    max_value=59,
+                    value=st.session_state.start_time % 60,
+                    step=1,
+                    key='fine_start_seconds_input'
+                )
 
-        # Display the selected start and end times in MM:SS format
-        st.write(f"Start Time: {seconds_to_mmss(start_time)}")
-        st.write(f"End Time: {seconds_to_mmss(end_time)}")
+            st.write("Fine-tune end time:")
+            end_col1, end_col2 = st.columns(2)
+            with end_col1:
+                end_minutes = st.number_input(
+                    "Minutes",
+                    min_value=0,
+                    max_value=(video_duration // 60),  # Maximum minutes based on video duration
+                    value=min(st.session_state.end_time // 60, video_duration // 60),
+                    step=1,
+                    key='fine_end_minutes_input'
+                )
+            with end_col2:
+                max_end_seconds = 59 if (end_minutes * 60 + 59) <= video_duration else (video_duration % 60)
+                end_seconds = st.number_input(
+                    "Seconds",
+                    min_value=0,
+                    max_value=max_end_seconds,
+                    value=min(st.session_state.end_time % 60, max_end_seconds),
+                    step=1,
+                    key='fine_end_seconds_input'
+                )
+
+            submit_button = st.form_submit_button(label='Update Times')
+
+        if submit_button:
+            # Update session state with the new fine-tuning input values
+            st.session_state.start_time = convert_to_seconds(start_minutes, start_seconds)
+            st.session_state.end_time = convert_to_seconds(end_minutes, end_seconds)
+
+            # Ensure start time is less than or equal to end time
+            if st.session_state.start_time >= st.session_state.end_time:
+                st.error("Start time must be less than end time.")
+            else:
+                # Convert the selected start and end times to mm:ss format
+                start_time_mm_ss = seconds_to_mmss(st.session_state.start_time)
+                end_time_mm_ss = seconds_to_mmss(st.session_state.end_time)
+
+                # Display the selected start and end times in MM:SS format
+                st.write(f"Start Time: {start_time_mm_ss}")
+                st.write(f"End Time: {end_time_mm_ss}")
+
+                # Calculate the clip duration in seconds
+                clip_duration = st.session_state.end_time - st.session_state.start_time
+
+                # Display the clip duration
+                st.write(f"Clip Duration: {format_duration(clip_duration)}")
 
         # Download button
         if st.button("Start Trimming"):
@@ -129,7 +204,7 @@ def main():
 
             # Trim the video based on user input times
             if st.session_state.downloaded_file:
-                trimmed_file = trim_video(st.session_state['downloaded_file'], start_time, end_time)
+                trimmed_file = trim_video(st.session_state['downloaded_file'], st.session_state.start_time, st.session_state.end_time)
                 st.write(f"Trimmed video is ready for download!")
 
                 # Show a download link for the trimmed video
