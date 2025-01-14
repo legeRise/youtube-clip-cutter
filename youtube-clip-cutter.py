@@ -169,7 +169,7 @@ def main():
                     key='fine_end_seconds_input'
                 )
 
-            submit_button = st.form_submit_button(label='Update Times')
+            submit_button = st.form_submit_button(label='Set')
 
         if submit_button:
             # Update session state with the new fine-tuning input values
