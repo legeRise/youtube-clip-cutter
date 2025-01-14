@@ -126,7 +126,7 @@ def main():
 
         # Create a form for input fields
         with st.form(key='time_input_form'):
-            st.write("Fine-tune start time:")
+            st.write("Start time:")
             start_col1, start_col2 = st.columns(2)
             with start_col1:
                 start_minutes = st.number_input(
@@ -147,7 +147,7 @@ def main():
                     key='fine_start_seconds_input'
                 )
 
-            st.write("Fine-tune end time:")
+            st.write("End time:")
             end_col1, end_col2 = st.columns(2)
             with end_col1:
                 end_minutes = st.number_input(
@@ -172,7 +172,6 @@ def main():
             submit_button = st.form_submit_button(label='Set')
 
         if submit_button:
-            # Update session state with the new fine-tuning input values
             st.session_state.start_time = convert_to_seconds(start_minutes, start_seconds)
             st.session_state.end_time = convert_to_seconds(end_minutes, end_seconds)
 
