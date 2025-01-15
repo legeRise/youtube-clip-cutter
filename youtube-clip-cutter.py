@@ -298,6 +298,10 @@ def cleanup_old_files():
         time.sleep(60)  # Sleep for 1 minute
         current_time = time.time()
 
+        # Check if the downloads folder exists
+        if not os.path.exists(folder_path):
+            continue
+
         # Check for new files and update their creation times
         for filename in os.listdir(folder_path):
             file_path = os.path.join(folder_path, filename)
