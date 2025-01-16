@@ -202,6 +202,7 @@ if url:
                 st.download_button("Download Trimmed Video", f, file_name=os.path.basename(trimmed_file))
 
             st.video(trimmed_file)
+            st.session_state.download_started = False
 
     if st.button("Create New"):
         # Reset session state variables
