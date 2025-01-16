@@ -307,10 +307,11 @@ def format_duration(seconds):
         return f"{minutes:02}:{seconds:02}"
 
 # Cleanup function to delete old files
-def cleanup_old_files():
+def cleanup_old_files(instant=False):
     folder_path = "downloads"
     while True:
-        time.sleep(600)  # Sleep for 10 minutes
+        if not instant:
+            time.sleep(600)  # Sleep for 10 minutes
         if not os.path.exists(folder_path):
             continue
         current_time = time.time()
@@ -440,6 +441,7 @@ if url:
 
     # Resetting session states on "Create New"
     if st.button("Create New"):
+        cleanup_old_files(instant=True)
         st.session_state.download_started = False
         st.session_state.downloaded_file = None
         st.session_state.download_progress = 0.0
