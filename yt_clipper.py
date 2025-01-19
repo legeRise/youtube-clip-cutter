@@ -55,7 +55,7 @@ class YTClipper:
             print(f"Video Duration: {video_duration // 60} minutes {video_duration % 60} seconds")
             return {"video_id": video_id, "title": title, "duration": video_duration}
 
-    def download_video(self, video_url, file_name="temp_video", quality="720"):  # 480p
+    def download_video(self, video_url, file_name="temp_video", quality="480"):  # 480p
         """Download a YouTube video using yt-dlp."""
         output_path = os.path.join(self.output_dir, f"{file_name}.mp4")
         print(output_path,'is the output path ext')
