@@ -113,8 +113,8 @@ if url:
             if st.session_state.start_time >= st.session_state.end_time:
                 st.error("Start time must be less than end time.")
             else:
-                start_time_mm_ss = seconds_to_mmss(st.session_state.start_time)
-                end_time_mm_ss = seconds_to_mmss(st.session_state.end_time)
+                start_time_mm_ss = format_duration(st.session_state.start_time)
+                end_time_mm_ss = format_duration(st.session_state.end_time)
                 st.write(f"Start Time: {start_time_mm_ss}")
                 st.write(f"End Time: {end_time_mm_ss}")
                 clip_duration = st.session_state.end_time - st.session_state.start_time
@@ -124,8 +124,8 @@ if url:
         if st.button("Start Trimming"):
             print("trimming button was clicked")
             if not st.session_state.download_started:
-                start_time = seconds_to_mmss(st.session_state.start_time)
-                end_time = seconds_to_mmss(st.session_state.end_time)
+                start_time = format_duration(st.session_state.start_time)
+                end_time = format_duration(st.session_state.end_time)
 
                 # Use st.spinner while downloading and trimming
                 with st.spinner("Trimming your video... This may take a while."):

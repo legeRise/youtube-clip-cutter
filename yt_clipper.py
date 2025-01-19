@@ -33,6 +33,7 @@ class YTClipper:
                     if current_time - creation_time > self.auto_delete_time:
                         os.remove(file_path)
                         logging.info(f"Deleted old clip: {file_path}")
+                        print(f"Deleted old clip: {file_path}")
             time.sleep(60)  # Check every minute
 
     def get_video_metadata(self, video_url):
@@ -50,33 +51,40 @@ class YTClipper:
             video_duration = info_dict.get('duration', 0)
             logging.info(f"Video Title: {title}")
             logging.info(f"Video Duration: {video_duration // 60} minutes {video_duration % 60} seconds")
+            print(f"Video Title: {title}")
+            print(f"Video Duration: {video_duration // 60} minutes {video_duration % 60} seconds")
             return {"video_id": video_id, "title": title, "duration": video_duration}
 
-    def download_video(self, video_url, file_name="temp_video.mp4", quality="480"):  # 480p
+    def download_video(self, video_url, file_name="temp_video", quality="720"):  # 480p
         """Download a YouTube video using yt-dlp."""
-        output_path = os.path.join(self.output_dir, file_name)
-
-        # Remove the old temp file if it exists
-        if os.path.exists(output_path):
-            os.remove(output_path)
-        
+        output_path = os.path.join(self.output_dir, f"{file_name}.mp4")
+        print(output_path,'is the output path ext')
         ydl_opts = {
-            'format': f'bestvideo[height<=?{quality}]+bestaudio/best[height<=?{quality}]',
+            'format': f'bestvideo[ext=mp4][height<=?{quality}]+bestaudio[ext=m4a]/best[ext={quality}]', # f'bestvideo[height<=?{quality}]+bestaudio/best[height<=?{quality}]',
             'outtmpl': output_path,
             'noplaylist': True,
             'quiet': True,
+            'postprocessors': [{
+                'key': 'FFmpegVideoConvertor',  # Use the built-in postprocessor for conversion
+                'preferedformat': 'mp4',   # single r in prefered matters
+            }]
         }
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download([video_url])
 
         logging.info(f"Video downloaded: {file_name}")
-        merged_file = os.path.join(self.output_dir, file_name + ".webm")  # The merged file will be .webm
+        print(f"Video downloaded")
+
+
+        merged_file = os.path.join(self.output_dir, f"{file_name}.mp4")  
         return merged_file
 
     def cut_video(self, input_file, start_time, end_time, output_file):
         """Trim a video using FFmpeg."""
+        print("inside for cutting")
         output_path = os.path.join(self.output_dir, output_file)
-        
+        print(f"input path: {input_file}")
+        print(f"output path: {output_path}")
         # If output file already exists, rename it by adding a number (e.g., clip_2.mp4)
         if os.path.exists(output_path):
             base, ext = os.path.splitext(output_file)
@@ -97,21 +105,29 @@ class YTClipper:
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if result.returncode != 0:
             logging.error(f"FFmpeg error: {result.stderr.decode()}")
+            print(f"FFmpeg error: {result.stderr.decode()}")
         else:
             logging.info(f"Clip saved: {output_path}")
+            print(f"Clip saved: {output_path}")
+        print("the output path of return  was: ",output_path)
         return output_path
 
     def download_and_cut(self, video_url, start_time, end_time, output_file):
         """Download and trim a YouTube video in one step."""
         logging.info("Downloading video...")
+        print("Downloading video...")
         temp_file = self.download_video(video_url)  # Get the merged file path
+        print(temp_file,'is the temp file')
         logging.info("Cutting the video...")
+        print("Cutting the video...")
         trimmed_file = self.cut_video(temp_file, start_time, end_time, output_file)
-        
+        print("after trimming",trimmed_file)
+        print("temp file: ",temp_file)
         # Remove the temporary merged file after trimming
         os.remove(temp_file)
         
         logging.info(f"Clip saved at: {trimmed_file}")
+        print(f"Clip saved at: {trimmed_file}")
         return trimmed_file
 
 
